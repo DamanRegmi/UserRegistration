@@ -6,4 +6,5 @@
 4. UserRepository and extend JpaRepository to use builtin method for database operations.
 5. UserRepositoryTest  DataJpaTest
 6. Create controller class AppController
-7. Create html file for index
+7. Create html file for index.using bootstrap.
+8. 
