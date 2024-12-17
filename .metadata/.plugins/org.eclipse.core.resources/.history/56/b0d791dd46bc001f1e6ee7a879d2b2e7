@@ -1,0 +1,57 @@
+package com.example.demo;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+public class WebSecurityConfig {
+
+    @Bean
+     UserDetailsService userDetailsService() {
+        return new CustomUserDetailsService(); // Ensure this class is implemented correctly
+    }
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService());
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .authenticationProvider(authenticationProvider()) // Set the custom provider
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/users").authenticated() // Protect /users
+                .anyRequest().permitAll() // Permit all other requests
+            )
+            .formLogin(login -> login
+                .loginPage("/login") // Explicit login page endpoint
+                .usernameParameter("email") // Username parameter for form login
+                .defaultSuccessUrl("/users", true) // Redirect to /users after successful login
+                .permitAll() // Allow anyone to access login
+            )
+            .logout(logout -> logout
+                .logoutSuccessUrl("/") // Redirect to home after logout
+                .permitAll()
+            )
+            .exceptionHandling(config -> config
+                .accessDeniedPage("/access-denied") // Optional custom access-denied page
+            );
+
+        return http.build();
+    }
+}
